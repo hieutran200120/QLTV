@@ -1,0 +1,190 @@
+﻿@using QLTV2.Models
+
+@{
+    ViewData["Title"] = "Danh Sách Cuốn Sách";
+    var dsTuaSach = ViewBag.ListTuaSach as List<TuaSach>;
+    var dsThuVien = ViewBag.ListThuVien as List<ThuVien>;
+}
+
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1>Quản Lý Cuốn Sách</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item active">Danh Sách Cuốn Sách</li>
+        </ol>
+    </div>
+</div>
+
+<div class="d-flex justify-content-end mb-3">
+    <form method="get" class="form-inline float-sm-right">
+        <input type="text" name="searchTerm" class="form-control mr-2" placeholder="Tìm kiếm tên tựa sách, thư viện, NXB..." value="@ViewBag.SearchTerm" />
+        <button type="submit" class=" btn btn-success ml-2"> <i class="fas fa-search"></i>Tìm kiếm</button>
+    </form>
+    <button type="button" class="btn btn-primary" onclick="openAddModal()" style="margin-left: 30px;">
+        <i class="fas fa-plus"></i> Thêm Cuốn Sách
+    </button>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Mã Tựa Sách</th>
+                            <th>Tên sách</th>
+                            <th>Mã Thư Viện</th>
+                            <th>Tên Thư Viện</th>
+                            <th>Số Lượng</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.MaTuaSach</td>
+                                     <td>@item.TuaSach.TenTuaSach</td>
+                                     <td>@item.MaThuVien</td>
+                                    <td>@item.ThuVien.TenThuVien</td>
+                                    <td>@item.SoLuong</td>
+                                    <td>
+                                        <button class="btn btn-primary"
+                                                data-tua-sach-id="@item.MaTuaSach"
+                                                data-thu-vien-id="@item.MaThuVien"
+                                                data-so-luong="@item.SoLuong"
+                                                onclick="openEditModal(this)">
+                                            <i class="fas fa-edit"></i> Sửa
+                                        </button>
+                                        <form action="@Url.Action("Delete", "CuonSach", new { MaTuaSach = item.MaTuaSach, MaThuVien = item.MaThuVien })" method="post" style="display: inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn có chắc muốn xóa không?')">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+    <!-- Phân Trang -->
+    <div class="card-tools">
+        <ul class="pagination pagination-sm">
+            <li class="page-item">
+                <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage > 1 ? ViewBag.CurrentPage - 1 : 1, searchTerm = ViewBag.SearchTerm })" class="page-link">&laquo;</a>
+            </li>
+        @if (ViewBag.TotalItems > 0)
+        {
+            int totalPages = (int)Math.Ceiling((double)ViewBag.TotalItems / ViewBag.PageSize);
+            for (int i = 1; i <= totalPages; i++)
+            {
+                            <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                <a href="@Url.Action("Index", new { page = i, searchTerm = ViewBag.SearchTerm })" class="page-link">@i</a>
+                            </li>
+            }
+        }
+            <li class="page-item">
+                <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage < (int)Math.Ceiling((double)ViewBag.TotalItems / ViewBag.PageSize) ? ViewBag.CurrentPage + 1 : (int)Math.Ceiling((double)ViewBag.TotalItems / ViewBag.PageSize), searchTerm = ViewBag.SearchTerm })" class="page-link">&raquo;</a>
+            </li>
+        </ul>
+    </div>
+<!-- Modal -->
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 700px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Thêm Cuốn Sách</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addEditForm" method="post">
+                    <div class="form-group">
+                        <label for="TuaSach">Tựa Sách:</label>
+                        <select class="form-control" id="TuaSach" name="MaTuaSach" required>
+                            <option value="" disabled selected>-- Chọn Tựa Sách --</option>
+                            @foreach (var tuaSach in dsTuaSach)
+                            {
+                                <option value="@tuaSach.TuaSachID">@tuaSach.TenTuaSach</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ThuVien">Thư Viện:</label>
+                        <select class="form-control" id="ThuVien" name="MaThuVien" required>
+                            <option value="" disabled selected>-- Chọn Thư Viện --</option>
+                            @foreach (var thuVien in dsThuVien)
+                            {
+                                <option value="@thuVien.MaThuVien">@thuVien.TenThuVien</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="SoLuong">Số Lượng:</label>
+                        <input type="number" class="form-control" id="SoLuong" name="SoLuong" min="1" required />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+                  <form id="EditForm" method="post">
+                    <div class="form-group">
+                        <label for="SoLuong">Số Lượng:</label>
+                        <input type="number" class="form-control" id="SoLuongEdit" name="SoLuong" min="1" required />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function openAddModal() {
+    document.getElementById('modalTitle').textContent = "Thêm Cuốn Sách";
+        document.getElementById('EditForm').style.display = 'none';
+    document.getElementById('addEditForm').style.display = 'block';
+    document.getElementById('addEditForm').action = "/CuonSach/Create";
+    document.getElementById('TuaSach').value = '';
+        document.getElementById('ThuVien').value = '';
+        document.getElementById('SoLuong').value = '';
+    $('#exampleModalCenter').modal('show');
+}
+
+function openEditModal(button) {
+    const tuaSachID = button.getAttribute('data-tua-sach-id');
+    const thuVienID = button.getAttribute('data-thu-vien-id');
+    const soLuong = button.getAttribute('data-so-luong');
+
+    if (!tuaSachID || !thuVienID || !soLuong) {
+        alert('Dữ liệu không đầy đủ!');
+        return;
+    }
+
+    document.getElementById('modalTitle').textContent = "Chỉnh Sửa Cuốn Sách";
+    document.getElementById('TuaSach').value = tuaSachID;
+    document.getElementById('ThuVien').value = thuVienID;
+    document.getElementById('SoLuongEdit').value = soLuong;
+     document.getElementById('EditForm').style.display = 'block';
+        document.getElementById('addEditForm').style.display = 'none';
+    document.getElementById('EditForm').action = `/CuonSach/Edit?MaTuaSach=${tuaSachID}&MaThuVien=${thuVienID}`;
+    $('#exampleModalCenter').modal('show');
+}
+
+</script>
+<!-- Thêm jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Thêm Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>

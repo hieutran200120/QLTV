@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\QLTV2.props" />
+</Project>

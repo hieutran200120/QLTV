@@ -1,0 +1,183 @@
+﻿@using QLTV2.Models
+@using PagedList;
+@model List<QLTV2.Models.ThuVien>
+@{
+    ViewData["Title"] = "Index";
+}
+            <div class="row mb-2">
+    <div class="col-sm-6">
+        <h1>Quản lý thư viện</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item active">Danh sách thư viện</li>
+        </ol>
+    </div>
+</div>
+    <div style="display: flex
+;
+    justify-content: flex-end;
+    margin: 20px;">
+            <form method="get" class="form-inline float-sm-right">
+            <input type="text" name="searchTerm" class="form-control" value="@ViewBag.SearchTerm" placeholder="Tìm kiếm..." />
+            <button type="submit" class=" btn btn-success ml-2"> <i class="fas fa-search"></i>Tìm kiếm</button>
+        </form>
+    <button type="button" class="btn btn-primary" onclick="openAddModal()" style="margin-left: 30px;">
+        <i class="fas fa-plus"></i> Thêm mới
+    </button>
+    </div>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <table class="table table-bordered ">
+                        <thead>
+                            <tr>
+                                <th>Tên thư viện</th>
+                                <th>Địa chỉ</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                             @foreach (var items in Model)
+                            {
+                                                             <tr data-widget="expandable-table" aria-expanded="false">
+                      <td>@items.TenThuVien</td>
+                      <td>@items.DiaChi</td>
+                      <td>
+
+                                          <button class="btn btn-primary"
+        data-ma-thu-vien="@items.MaThuVien"
+        data-ten-thu-vien="@items.TenThuVien"
+        data-dia-chi="@items.DiaChi"
+        onclick="openEditModal(this)">
+                                                    <i class="fas fa-edit"></i> Sửa
+                                                </button>
+                                                         <form action="@Url.Action("Delete", "ThuVien", new { id = items.MaThuVien })" method="post" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn có muốn xóa sản phẩm không?')">
+              <i class="fas fa-trash"></i> Xóa
+    </button>
+</form> 
+                    </tr>
+}
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </section>
+<!-- Phân Trang -->
+<div class="card-tools">
+    <ul class="pagination pagination-sm">
+        <li class="page-item">
+            <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage > 1 ? ViewBag.CurrentPage - 1 : 1, searchTerm = ViewBag.SearchTerm })" 
+               class="page-link">&laquo;</a>
+        </li>
+        @if (ViewBag.TotalItems > 0)
+        {
+            int totalPages = (int)Math.Ceiling((double)ViewBag.TotalItems / ViewBag.PageSize); // Khai báo biến trong ngữ cảnh
+            for (int i = 1; i <= totalPages; i++)
+            {
+                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                            <a href="@Url.Action("Index", new { page = i, searchTerm = ViewBag.SearchTerm })" class="page-link">@i</a>
+                        </li>
+            }
+        }
+        <li class="page-item">
+            <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage < (int)Math.Ceiling((double)ViewBag.TotalItems / ViewBag.PageSize) ? ViewBag.CurrentPage + 1 : (int)Math.Ceiling((double)ViewBag.TotalItems / ViewBag.PageSize), searchTerm = ViewBag.SearchTerm })" 
+               class="page-link">&raquo;</a>
+        </li>
+    </ul>
+</div>
+     <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 700px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Thêm thư viện</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <!-- Add Form -->
+                    <form id="addForm" asp-action="Create" method="post" style="display: block;">
+                        <div class="form-group">
+                                <label for="TenThuVien">Tên thư viện:</label>
+                                <input type="text" class="form-control" placeholder="Nhập tên thư viện" name="TenThuVien" required>
+                                <div class="invalid-feedback">Vui lòng điền vào trường này.</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="DiaChi">Địa chỉ:</label>
+                                <input type="text" class="form-control" placeholder="Nhập tên địa chỉ" name="DiaChi" required>
+                                <div class="invalid-feedback">Vui lòng điền vào trường này.</div>
+                            </div>
+                            <div class="modal-footer justify-content-between">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Đóng</button>
+                                <input type="submit" value="Thêm mới" class="btn btn-primary" />
+                            </div>
+                    </form>
+
+                    <!-- Edit Form -->
+                         <form id="editForm" asp-action="Edit" method="post" class="needs-validation" novalidate style="display: none;" >
+
+                           <input type="hidden" id="MaThuVien" name="MaThuVien" />
+    <div class="form-group">
+        <label for="TenThuVien">Tên thư viện:</label>
+        <input type="text" id="TenThuVien" class="form-control" name="TenThuVien" />
+    </div>
+    <div class="form-group">
+        <label for="DiaChi">Địa chỉ:</label>
+        <input type="text" id="DiaChi" class="form-control" name="DiaChi" />
+    </div>
+                            <div class="modal-footer justify-content-between">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                <input type="submit" value="Save Changes" class="btn btn-primary" />
+                            </div>
+                        </form>
+                </div>
+            </div>
+        </div>
+    </div>
+<script>
+  function openEditModal(button) {
+        const maThuVien = button.getAttribute('data-ma-thu-vien');
+        const tenThuVien = button.getAttribute('data-ten-thu-vien');
+        const diaChi = button.getAttribute('data-dia-chi');
+
+        // Gán giá trị vào các trường input
+        document.getElementById('MaThuVien').value = maThuVien || '';
+        document.getElementById('TenThuVien').value = tenThuVien || '';
+        document.getElementById('DiaChi').value = diaChi || '';
+
+        // Hiển thị form chỉnh sửa
+        document.getElementById('addForm').style.display = 'none';
+        document.getElementById('editForm').style.display = 'block';
+        $('#exampleModalCenter').modal('show');
+    }
+
+  function openAddModal() {
+        // Xóa giá trị các trường và hiển thị form thêm mới
+        document.getElementById('modalTitle').textContent = "Thêm thư viện";
+        document.getElementById('MaThuVien').value = '';
+        document.getElementById('TenThuVien').value = '';
+        document.getElementById('DiaChi').value = '';
+        document.getElementById('addForm').style.display = "block";
+        document.getElementById('editForm').style.display = "none";
+
+        // Hiển thị modal
+        $('#exampleModalCenter').modal('show');
+    }
+</script>
+
+<!-- Thêm jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Thêm Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    </div>
+</div>
+

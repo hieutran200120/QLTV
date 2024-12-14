@@ -1,0 +1,194 @@
+﻿@using QLTV2.Models
+
+@{
+    ViewData["Title"] = "Index";
+    var dsNhaXB = (List<NhaXuatBan>)ViewBag.ListNhaXuatBans;
+}
+
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1>Quản lý Tựa Sách</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item active">danh sách tự sách</li>
+        </ol>
+    </div>
+</div>
+
+<div style="display: flex; justify-content: flex-end; margin: 20px;">
+     <form method="get" class="form-inline float-sm-right">
+            <input type="text" name="searchTerm" class="form-control" value="@ViewBag.SearchTerm" placeholder="Tìm kiếm..." />
+            <button type="submit" class=" btn btn-success ml-2"> <i class="fas fa-search"></i>Tìm kiếm</button>
+        </form>
+    <button type="button" class="btn btn-primary" onclick="openAddModal()" style="margin-left: 30px;">
+        <i class="fas fa-plus"></i> Thêm mới
+    </button>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Tên tựa sách</th>
+                            <th>Tên nhà xuất bản</th>
+                            <th>Tên tác giả</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.TuaSach.TenTuaSach</td>
+                                    <td>@item.TuaSach.TenNXB</td>
+                                    <td>@item.TenTacGia</td>
+                                    <td>
+                                        <button class="btn btn-primary"
+                                                data-tua-sach-id="@item.TuaSach.TuaSachID"
+                                                data-ten-tua-sach="@item.TuaSach.TenTuaSach"
+                                                data-ten-tac-gia="@item.TenTacGia"
+                                                    data-ten-nxb="@item.TuaSach.TenNXB"
+                                                onclick="openEditModal(this)">
+                                            <i class="fas fa-edit"></i> Sửa
+                                        </button>
+                                           <form action="@Url.Action("Delete", "TuaSach", new { TuaSachID = item.TuaSach.TuaSachID })" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn có chắc muốn xóa không?')">
+            <i class="fas fa-trash"></i> Xóa
+        </button>
+    </form>
+                                    </td>
+                                </tr>
+                            }
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Phân Trang -->
+    <div class="card-tools">
+        <ul class="pagination pagination-sm">
+            <li class="page-item">
+                <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage > 1 ? ViewBag.CurrentPage - 1 : 1, searchTerm = ViewBag.SearchTerm })" class="page-link">&laquo;</a>
+            </li>
+            @if (ViewBag.TotalItems > 0)
+            {
+                int totalPages = (int)Math.Ceiling((double)ViewBag.TotalItems / ViewBag.PageSize);
+                for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                        <a href="@Url.Action("Index", new { page = i, searchTerm = ViewBag.SearchTerm })" class="page-link">@i</a>
+                    </li>
+                }
+            }
+            <li class="page-item">
+                <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage < (int)Math.Ceiling((double)ViewBag.TotalItems / ViewBag.PageSize) ? ViewBag.CurrentPage + 1 : (int)Math.Ceiling((double)ViewBag.TotalItems / ViewBag.PageSize), searchTerm = ViewBag.SearchTerm })" class="page-link">&raquo;</a>
+            </li>
+        </ul>
+    </div>
+<!-- Modal -->
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 700px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Thêm tựa sách</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addEditForm" method="post">
+                    <input type="hidden" id="TuaSachID" name="TuaSachID" />
+                    <div class="form-group">
+                        <label for="TenTuaSach">Tên Tựa Sách:</label>
+                        <input type="text" class="form-control" id="TenTuaSach" name="TenTuaSach" required />
+                        <div class="invalid-feedback">Vui lòng điền vào trường này.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="TenNXB">Tên Nhà Xuất Bản:</label>
+                        <select class="form-control" id="TenNXB" name="TenNXB" required>
+                            <option value="" disabled selected>Chọn nhà xuất bản</option>
+                            @if (dsNhaXB != null && dsNhaXB.Any())
+                            {
+                                foreach (var nxb in dsNhaXB)
+                                {
+                                    <option value="@nxb.TenNXB">@nxb.TenNXB</option>
+                                }
+                            }
+                        </select>
+                        <div class="invalid-feedback">Vui lòng chọn nhà xuất bản.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="TenTacGia">Tên Tác Giả:</label>
+                        <input type="text" class="form-control" id="TenTacGia" name="TenTacGia" required />
+                        <div class="invalid-feedback">Vui lòng điền vào trường này.</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openAddModal() {
+        document.getElementById('modalTitle').textContent = "Thêm Tựa Sách";
+        document.getElementById('addEditForm').action = "@Url.Action("Create", "TuaSach")";
+        resetForm();
+        $('#exampleModalCenter').modal('show');
+    }
+
+   function openEditModal(button) {
+    const tuaSachID = button.getAttribute('data-tua-sach-id');
+    const tenTuaSach = button.getAttribute('data-ten-tua-sach');
+    const tenTacGia = button.getAttribute('data-ten-tac-gia');
+    const tenNXB = button.getAttribute('data-ten-nxb'); // Nhận dữ liệu nhà xuất bản
+
+    if (!tuaSachID || !tenTuaSach || !tenTacGia || !tenNXB) {
+        alert('Dữ liệu không đầy đủ!');
+        return;
+    }
+
+    // Cập nhật các trường trong modal
+    document.getElementById('modalTitle').textContent = "Chỉnh sửa Tựa Sách";
+    document.getElementById('TuaSachID').value = tuaSachID;
+    document.getElementById('TenTuaSach').value = tenTuaSach;
+    document.getElementById('TenTacGia').value = tenTacGia;
+
+    // Cập nhật Nhà Xuất Bản
+    const nhaXuatBanSelect = document.getElementById('TenNXB');
+    if (nhaXuatBanSelect) {
+        for (let option of nhaXuatBanSelect.options) {
+            if (option.value === tenNXB) {
+                option.selected = true;
+                break;
+            }
+        }
+    }
+           document.getElementById('addEditForm').action = `/TuaSach/Edit?id=${tuaSachID}`;
+    // Hiển thị modal
+    $('#exampleModalCenter').modal('show');
+}
+
+    function resetForm() {
+        document.getElementById('TuaSachID').value = '';
+        document.getElementById('TenTuaSach').value = '';
+        document.getElementById('TenTacGia').value = '';
+        document.getElementById('TenNXB').selectedIndex = 0;
+    }
+</script>
+
+<!-- Thêm jQuery và Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">

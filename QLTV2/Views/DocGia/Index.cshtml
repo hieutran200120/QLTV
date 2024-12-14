@@ -1,0 +1,207 @@
+﻿@using QLTV2.Models
+
+@{
+    ViewData["Title"] = "Index";
+}
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Quản lý độc giả</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item active">Danh sách độc giả</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div style="display: flex
+;
+    justify-content: flex-end;
+    margin: 20px;">
+        <form method="get" class="form-inline float-sm-right">
+        <input type="text" name="searchTerm" class="form-control mr-2" placeholder="Tìm kiếm tên, địa chỉ, SDT..." value="@ViewBag.SearchTerm" />
+        <input type="number" name="ST" class="form-control mr-2" placeholder="Số thẻ độc giả" value="@ViewBag.ST" />
+         <button type="submit" class=" btn btn-success ml-2"> <i class="fas fa-search"></i>Tìm kiếm</button>
+    </form>
+    <button type="button" class="btn btn-primary" onclick="openAddModal()" style="margin-left: 30px;">
+        <i class="fas fa-plus"></i> Thêm mới
+    </button>
+    </div>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <table class="table table-bordered ">
+                        <thead>
+                            <tr>
+                                <th>số thẻ</th>
+                                <th>Tên đọc giả</th>
+                                <th>Địa chỉ đọc giả</th>
+                                <th>Số điện thoại </th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                             @foreach (var items in Model)
+                            {
+                                                             <tr data-widget="expandable-table" aria-expanded="false">
+                      <td>@items.SoTheDG</td>
+                      <td>@items.TenDG</td>
+                      <td>@items.DiaChiDG</td>
+                          <td>@items.SDTDG</td>
+                      <td>
+
+                                          <button type="button" class="btn btn-primary"
+    data-so-the-dg="@items.SoTheDG" 
+    data-ten-dg="@items.TenDG" 
+    data-dia-chi-dg="@items.DiaChiDG"
+    data-sdt-dg="@items.SDTDG"
+    onclick="openEditModal(this)">
+                                                   <i class="fas fa-edit"></i> Sửa
+                                                </button>
+                                                                 <form action="@Url.Action("Delete", "DocGia", new { id = items.SoTheDG })" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn có muốn xóa sản phẩm không?')">
+         <i class="fas fa-trash"></i> Xóa
+    </button>
+</form> 
+                    </tr>
+}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Phân Trang -->
+<div class="card-tools">
+    <ul class="pagination pagination-sm">
+        <li class="page-item">
+            <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage > 1 ? ViewBag.CurrentPage - 1 : 1, searchTerm = ViewBag.SearchTerm })" 
+               class="page-link">&laquo;</a>
+        </li>
+        @if (ViewBag.TotalItems > 0)
+        {
+            int totalPages = (int)Math.Ceiling((double)ViewBag.TotalItems / ViewBag.PageSize); // Khai báo biến trong ngữ cảnh
+            for (int i = 1; i <= totalPages; i++)
+            {
+                                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                    <a href="@Url.Action("Index", new { page = i, searchTerm = ViewBag.SearchTerm })" class="page-link">@i</a>
+                                </li>
+            }
+        }
+        <li class="page-item">
+            <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage < (int)Math.Ceiling((double)ViewBag.TotalItems / ViewBag.PageSize) ? ViewBag.CurrentPage + 1 : (int)Math.Ceiling((double)ViewBag.TotalItems / ViewBag.PageSize), searchTerm = ViewBag.SearchTerm })" 
+               class="page-link">&raquo;</a>
+        </li>
+    </ul>
+</div>
+
+     <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 700px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Thêm thư viện</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <!-- Add Form -->
+                   <form id="addForm" asp-action="Create" method="post" style="display: block;">
+    <div class="form-group">
+        <label for="TenDG">Tên độc giả:</label>
+        <input type="text" class="form-control" placeholder="Nhập tên độc giả" name="TenDG" required>
+        <div class="invalid-feedback">Vui lòng điền vào trường này.</div>
+    </div>
+
+    <div class="form-group">
+        <label for="DiaChiDG">Địa chỉ:</label>
+        <input type="text" class="form-control" placeholder="Nhập địa chỉ" name="DiaChiDG" required>
+        <div class="invalid-feedback">Vui lòng điền vào trường này.</div>
+    </div>
+    
+    <div class="form-group">
+        <label for="SDTDG">Số điện thoại:</label>
+        <input type="text" class="form-control" placeholder="Nhập số điện thoại" name="SDTDG" required>
+        <div class="invalid-feedback">Vui lòng điền vào trường này.</div>
+    </div>
+
+    <div class="modal-footer justify-content-between">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Đóng</button>
+        <input type="submit" value="thêm mới" class="btn btn-primary" />
+    </div>
+</form>
+
+
+                    <!-- Edit Form -->
+                        <form id="editForm" asp-action="Edit" method="post" class="needs-validation" novalidate style="display: none;">
+    <input type="hidden" id="SoTheDG" name="SoTheDG" />
+
+    <div class="form-group">
+        <label for="TenDG">Tên độc giả:</label>
+        <input type="text" id="TenDG" class="form-control" name="TenDG" />
+    </div>
+
+    <div class="form-group">
+        <label for="DiaChiDG">Địa chỉ:</label>
+        <input type="text" id="DiaChiDG" class="form-control" name="DiaChiDG" />
+    </div>
+
+    <div class="form-group">
+        <label for="SDTDG">Số điện thoại:</label>
+        <input type="text" id="SDTDG" class="form-control" name="SDTDG" />
+    </div>
+
+    <div class="modal-footer justify-content-between">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Đóng</button>
+        <input type="submit" value="Lưu" class="btn btn-primary" />
+    </div>
+</form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+<script>
+  function openEditModal(button) {
+       const soTheDG = button.getAttribute('data-so-the-dg');
+const tenDG = button.getAttribute('data-ten-dg');
+const diaChiDG = button.getAttribute('data-dia-chi-dg');
+const sdtDG = button.getAttribute('data-sdt-dg');
+
+document.getElementById('SoTheDG').value = soTheDG || '';
+document.getElementById('TenDG').value = tenDG || '';
+document.getElementById('DiaChiDG').value = diaChiDG || '';
+document.getElementById('SDTDG').value = sdtDG || '';
+
+        // Hiển thị form chỉnh sửa
+        document.getElementById('addForm').style.display = 'none';
+        document.getElementById('editForm').style.display = 'block';
+        $('#exampleModalCenter').modal('show');
+    }
+
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = "Thêm độc giả";
+    document.getElementById('SoTheDG').value = '';
+    document.getElementById('TenDG').value = '';
+    document.getElementById('DiaChiDG').value = '';
+    document.getElementById('SDTDG').value = '';
+    
+    document.getElementById('addForm').style.display = "block";
+    document.getElementById('editForm').style.display = "none";
+    $('#exampleModalCenter').modal('show');
+}
+</script>
+
+<!-- Thêm jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Thêm Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    </div>
+</div>
+
